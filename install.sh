@@ -3,7 +3,7 @@
 
 # Installs *.py package by copying all .py files to install_dir. 
 
-itall_dir=${1}
+install_dir=${1}
 if [ ${install_dir} ]; then
     current_dir=`pwd`
     cd ${install_dir}
