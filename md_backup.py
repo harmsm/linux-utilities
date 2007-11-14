@@ -9,19 +9,20 @@ trajectories is placed in the top of the output directory.
 """
 
 __author__ = "Michael J. Harms"
-__date__ = "070622"
+__date__ = "071114"
 __usage__ = "md_backup.py input_dir output_dir"
 
 import os, sys, shutil,time
 
+TRAJ_OUT = "TRAJECTORY_LOCATIONS.txt"
+TRAJ_EXTENSIONS = ["trr","veldcd","dcd","xtc"]
 FILE_HEADER = \
-"""This is a back up of a molecular dynamics calculation.  It takes too much space
+"""
+This is a back up of a molecular dynamics calculation.  It takes too much space
 to store trajectories in duplicate (triplicate, etc.), so all files except the
 actual trajectory(s) are preserved here.  It should be possible to recreate the 
 trajectory(s) using only the contents of this directory.  This file lists the
 location of the original trajectories as of %s.  \n\n"""
-TRAJ_OUT = "TRAJECTORY_LOCATIONS.txt"
-TRAJ_EXTENSIONS = ["trr","veldcd","dcd","xtc"]
 
 
 def mdBackup(input_dir,root,files,output_root):
@@ -32,15 +33,17 @@ def mdBackup(input_dir,root,files,output_root):
     skipped trajectories.
     """
 
-    # Slice off the part of the root file listing that is from the input_dir
-    # so we can make sane paths.
-    abs_input_dir = os.path.abspath(input_dir)
-    common_root = root[len(abs_input_dir)+1:]
-
     # Determine absolute path to new directory and create it
-    out_dir = os.path.join(output_root,common_root)
-    out_dir = os.path.abspath(out_dir)
-    os.mkdir(out_dir)
+    out_dir = os.path.join(output_root,root)
+
+    # Try to make a directory; if it exists already, continue
+    try:
+        os.mkdir(out_dir)
+    except OSError, (error_code,error_string):
+        if error_code == 17:
+            pass
+        else:
+            raise OSError(error_string)
 
     # Create list of files to copy, excluding any file with .ext ext. or .ext.
     # where ext is in TRAJ_EXTENSIONS
@@ -77,8 +80,8 @@ def main():
 
     # Parse command line
     try:
-        input_dir = sys.argv[1]
-        output_dir = sys.argv[2]
+        input_dir = os.path.abspath(sys.argv[1])
+        output_dir = os.path.abspath(sys.argv[2])
     except IndexError:
         print __usage__
         sys.exit()
@@ -92,11 +95,16 @@ def main():
     if os.path.exists(output_dir):
         err = "Output directory cannot exist prior to backup"
         raise IOError(err)
+    
+    # Set up root directory within output directory
+    os.mkdir(output_dir)
+    os.chdir(os.path.split(input_dir)[0])
 
     # Perform recursive copy operation on entire directory
+    input_root = os.path.split(input_dir)[-1]
     skipped_trajectories = []
-    for root, dirs, files in os.walk(input_dir):
-        skipped = mdBackup(input_dir,root,files,output_dir)
+    for root, dirs, files in os.walk(input_root):
+        skipped = mdBackup(input_root,root,files,output_dir)
         skipped_trajectories.extend(skipped)
 
     # Write all skipped trajectories to file
@@ -106,6 +114,10 @@ def main():
     out.write(FILE_HEADER % time.asctime())
     for t in skipped_trajectories:
         out.write("%s\n" % t)
+
+    if len(skipped_trajectories) == 0:
+        out.write("No trajectories were in this directory!\n")
+
     out.close()
 
 
