@@ -11,7 +11,7 @@ contain specific layers to be written out.
 """
 __author__ = "Michael J. Harms"
 __date__ = "080826"
-__usage__ = "presentationCreator.py input_file output_pdf"
+__usage__ = "presentationCreator.py input_file output_pdf [summary]"
 
 import os, sys
 from subprocess import *
@@ -93,7 +93,7 @@ def svg2pdf(svg_file,pdf_file):
         print >>sys.stderr, "Execution failed:", e
 
 
-def extractLayers(svg_file,layers_to_write=[]):
+def extractLayers(svg_file,layers_to_write=[],summary=False):
     """
     Extract layers from an inkscape svg file and write to pdfs.  The list of 
     pdf files is returned.
@@ -106,6 +106,13 @@ def extractLayers(svg_file,layers_to_write=[]):
     f = open(svg_file,'r')
     raw_lines = f.readlines()
     f.close()
+
+    # Go into the directory containing the svg file
+    curr_dir = os.getcwd()
+    svg_split = os.path.split(svg_file)
+    svg_name = svg_split[-1]
+    svg_dir = svg_split[0]
+    os.chdir(svg_dir)
 
     # Remove white space so lines are easily parsable
     lines = [l.strip() for l in raw_lines]
@@ -128,14 +135,21 @@ def extractLayers(svg_file,layers_to_write=[]):
     # If there is only one layer, no display lines will be found.  Nothing else
     # needs to be done, so write out pdf and return.
     if len(display_lines) == 0:
-        pdf_file = "presentationCreator_tmp_%i.pdf" % 0
-        svg2pdf(svg_file,pdf_file)
+        pdf_file = os.path.join(curr_dir,"presentationCreator_tmp_%i.pdf" % 0)
+        svg2pdf(svg_name,pdf_file)
+        os.chdir(curr_dir)
         return [pdf_file]
 
     # Decide which layers to write out
-    if layers_to_write == None:
-        layers_to_write = range(len(display_lines)) 
-    
+    if summary:
+        if layers_to_write == None:
+            layers_to_write = [len(display_lines)-1]
+        else:
+            layers_to_write = [layers_to_write[-1]]
+    else:
+        if layers_to_write == None:
+            layers_to_write = range(len(display_lines)) 
+   
     # Turn every layer off
     out_lines = raw_lines[:]
     for line in display_lines:
@@ -163,7 +177,8 @@ def extractLayers(svg_file,layers_to_write=[]):
             g.close()
 
             # Run inkscape to convert to pdf
-            pdf_file = "presentationCreator_tmp_%i.pdf" % line
+            pdf_file = os.path.join(curr_dir,
+                                    "presentationCreator_tmp_%i.pdf" % line)
             svg2pdf(tmp_svg,pdf_file)
             pdf_list.append(pdf_file)
 
@@ -174,6 +189,8 @@ def extractLayers(svg_file,layers_to_write=[]):
     if len(layers_to_write) != 0:
         print "Warning! The following layers were not found in %s:" % svg_file
         print "    %s" % ("".join(["%i " % i for i in layers_to_write])) 
+
+    os.chdir(curr_dir)
 
     return pdf_list
 
@@ -189,6 +206,13 @@ def main():
     except IndexError:
         print __usage__
         sys.exit()
+
+    summary = False
+    try:
+        if sys.argv[3][0] == "s":
+            summary = True
+    except IndexError:
+        pass 
 
     # Get list of pdf files
     svg_files = readFile(input_file)
@@ -216,7 +240,7 @@ def main():
         print out
 
         # Extract svg layers to pdf files and append to output pdf
-        pdf_files = extractLayers(svg[0],svg[1])
+        pdf_files = extractLayers(svg[0],svg[1],summary)
         for pdf in pdf_files:
 
             input = PdfFileReader(file(pdf,"rb"))
