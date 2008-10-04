@@ -22,7 +22,8 @@ case "${mode}" in
         echo "aticonfig utility."
         echo ""; echo '    Usage: $> configure_display MODE'
         echo ""; echo "Allowed MODE values are:"
-        echo "    single: only use the laptop monitor"
+        echo "    single [x y]: only use the laptop monitor.  Optionally allow"
+        echo "                  user to specify resolution.
         echo "    clone x y: clone the display on an external monitor"
         echo "               using the given x/y resolution"
         echo "    big: span display across laptop and external monitor"
@@ -31,9 +32,18 @@ case "${mode}" in
         exit
         ;;
     "single")
-        echo "Configuring X for a single display"
+    
+        if ! ( [ $2 ] && [ $3 ] ); then
+            x=1400
+            y=1050
+        else
+            x=$2
+            y=$3
+        fi
+
+        echo "Configuring X for a single display (${x}x${y})"
         aticonfig --desktop-setup=single --sync-vsync=on \
-                  --resolution=0,1400x1050
+                  --resolution=0,${x}x${y}
         ;;
     "clone")
         if ! ( [ $2 ] && [ $3 ] ); then
@@ -44,7 +54,7 @@ case "${mode}" in
 
         x=$2
         y=$3
-        echo "Configuring X for a ${x}x${y} cloneed display!"
+        echo "Configuring X for a ${x}x${y} cloned display!"
         aticonfig --desktop-setup=clone --mode2=${x}x${y} \
                   --sync-vsync=on --resolution=0,${x}x${y}
 
