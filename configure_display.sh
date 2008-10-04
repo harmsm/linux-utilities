@@ -23,7 +23,7 @@ case "${mode}" in
         echo ""; echo '    Usage: $> configure_display MODE'
         echo ""; echo "Allowed MODE values are:"
         echo "    single [x y]: only use the laptop monitor.  Optionally allow"
-        echo "                  user to specify resolution.
+        echo "                  user to specify resolution."
         echo "    clone x y: clone the display on an external monitor"
         echo "               using the given x/y resolution"
         echo "    big: span display across laptop and external monitor"
@@ -41,7 +41,7 @@ case "${mode}" in
             y=$3
         fi
 
-        echo "Configuring X for a single display (${x}x${y})"
+        echo "Configuring X for a single display (${x} x ${y})"
         aticonfig --desktop-setup=single --sync-vsync=on \
                   --resolution=0,${x}x${y}
         ;;
