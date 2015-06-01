@@ -13,7 +13,7 @@ if [[ "${1}" == "start" ]]; then
 
 elif [[ "${1}" == "stop" ]]; then
     sudo vpnc-disconnect
-    $/DIR/checkIP.sh
+    $DIR/checkIP.sh
 else
     echo "${1} not recognized."
 fi
