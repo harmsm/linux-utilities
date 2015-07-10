@@ -1,0 +1,14 @@
+This is a basic--somewhat hacked--workflow that can be used to rip a large 
+number of episodes of a tv show from dvd, then load in appropriate meta data.
+
+The basic flow:
+    ripper.sh -- automates ripping all tracks off of a given dvd
+    xml/xmlFlattener.py
+        Takes all xml files in a directory (presumably downloaded off of a tv
+        metadata website) and creates a flat ";" delimited file.  It also cleans
+        up any messed up unicode that might have come through.  A set of example
+        xml files (and .jpg thumbnails) is in the xml directory.
+    xml/createAtomicParsleyBash.py:
+        Takes flat file from last step and uses to copy all of the mp4s from 
+        ripper.sh into ones with sane names, then generates a bash script that
+        will run AtomicParsley on each file to load in appropriate metadata.
