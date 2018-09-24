@@ -36,17 +36,17 @@ def main(argv=None):
         extra_characters = [] 
 
     # Create a list of possible characters
-    characters = list(string.letters)
+    characters = list(string.ascii_letters)
     characters.extend(list(string.digits))
     characters.extend(list(DEFAULT_PUNC))
     characters.extend(extra_characters)
 
     # Make each character unique
-    characters = dict([(c,[]) for c in characters]).keys()
+    characters = list(set(characters))
 
     # Generate and return a random password
     return "".join([choice(characters) for i in range(password_length)])
 
 # If called from the command line
 if __name__ == "__main__":
-    print main()
+    print(main())
